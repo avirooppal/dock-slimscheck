@@ -1,0 +1,47 @@
+# This is a well-optimized Dockerfile following best practices
+
+# Use multi-stage builds to reduce size
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy only package files first to leverage caching
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy only necessary source files
+COPY src/ ./src/
+COPY public/ ./public/
+
+# Build the application
+RUN npm run build
+
+# Use a smaller production image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy built assets from builder stage
+COPY --from=builder --chown=appuser:appgroup /app/build ./build
+COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --chown=appuser:appgroup package.json ./
+
+# Use the non-root user
+USER appuser
+
+# Expose only necessary port
+EXPOSE 3000
+
+# Add a healthcheck
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+# Start the application
+CMD ["node", "build/server.js"]

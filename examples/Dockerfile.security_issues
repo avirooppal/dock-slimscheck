@@ -1,0 +1,42 @@
+# Dockerfile with multiple security issues
+FROM ubuntu:latest
+
+# Install packages (no cleanup)
+RUN apt-get update && apt-get install -y \
+    apache2 \
+    php \
+    php-mysql \
+    mysql-client \
+    curl \
+    wget \
+    vim
+
+# Set up Apache
+RUN a2enmod rewrite
+
+# Use ADD with URL (security risk)
+ADD https://example.com/config.tar.gz /tmp/
+RUN tar -xzf /tmp/config.tar.gz -C /etc/apache2/
+
+# Expose many ports (some may be unnecessary)
+EXPOSE 22 80 443 3306 8080
+
+# Copy application files
+COPY . /var/www/html/
+
+# Set execute permissions on scripts
+RUN chmod +x /var/www/html/scripts/*.sh
+
+# Set Apache environment variables
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_PID_FILE /var/run/apache2.pid
+ENV APACHE_RUN_DIR /var/run/apache2
+ENV APACHE_LOCK_DIR /var/lock/apache2
+
+# No USER specified (runs as root)
+# No HEALTHCHECK defined
+
+# Start Apache in foreground
+CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]

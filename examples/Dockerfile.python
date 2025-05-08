@@ -1,0 +1,26 @@
+# Python application with several issues to detect
+FROM python:3.9
+
+WORKDIR /app
+
+# Copy everything without .dockerignore
+COPY . .
+
+# Install system dependencies without cleanup
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    postgresql-client \
+    curl \
+    git
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose multiple ports
+EXPOSE 8000 5000 9090
+
+# No USER specified (runs as root)
+# No HEALTHCHECK defined
+
+CMD ["python", "app.py"]

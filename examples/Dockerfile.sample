@@ -1,0 +1,29 @@
+# This is a sample Dockerfile with common issues for testing
+
+# Using a large base image and latest tag
+FROM node:latest
+
+# Setting work directory
+WORKDIR /app
+
+# Copy everything (no .dockerignore)
+COPY . .
+
+# Install dependencies without cleanup
+RUN apt-get update && \
+    apt-get install -y curl wget
+
+# Use ADD with URL (security risk)
+ADD https://example.com/sample.tar.gz /tmp/
+
+# Install npm packages
+RUN npm install
+
+# Expose ports (not all may be needed)
+EXPOSE 3000 8080 9000
+
+# No USER specified (runs as root)
+# No HEALTHCHECK defined
+
+# Start the application
+CMD ["npm", "start"]

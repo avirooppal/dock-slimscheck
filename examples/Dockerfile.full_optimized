@@ -1,0 +1,51 @@
+# A fully optimized Dockerfile with all best practices
+# Multi-stage build for a NodeJS application
+
+# Build stage
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files for better caching
+COPY package*.json ./
+RUN npm ci
+
+# Copy only necessary source files
+COPY tsconfig.json ./
+COPY src/ ./src/
+
+# Build application
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
+# Set to production environment
+ENV NODE_ENV=production
+
+# Create app directory
+WORKDIR /app
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy only production dependencies
+COPY --from=builder --chown=appuser:appgroup /app/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built app
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
+
+# Use non-root user
+USER appuser
+
+# Expose only necessary port with comment explaining why
+# Port 3000 is used for the web server
+EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+# Command to run app
+CMD ["node", "dist/index.js"]
