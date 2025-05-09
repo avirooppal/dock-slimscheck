@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	"github.com/avirooppal/dock-slimscheck.git/checks"
-	"github.com/avirooppal/dock-slimscheck.git/parser"
-	"github.com/avirooppal/dock-slimscheck.git/security"
+	"github.com/avirooppal/dock-slimscheck/checks"
+	"github.com/avirooppal/dock-slimscheck/parser"
+	"github.com/avirooppal/dock-slimscheck/security"
 )
 
 // Version information

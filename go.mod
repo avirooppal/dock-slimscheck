@@ -1,4 +1,4 @@
-module github.com/avirooppal/dock-slimscheck.git
+module github.com/avirooppal/dock-slimscheck
 
 go 1.21
 
