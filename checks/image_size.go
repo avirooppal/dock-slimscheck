@@ -6,59 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/avirooppal/dock-slimscheck.git/parser"
+	"github.com/avirooppal/dock-slimscheck/parser"
 )
-
-// LargeBaseImages is a map of known large base images
-var LargeBaseImages = map[string]bool{
-	"node":      true,
-	"python":    true,
-	"ruby":      true,
-	"openjdk":   true,
-	"php":       true,
-	"ubuntu":    true,
-	"debian":    true,
-	"centos":    true,
-	"fedora":    true,
-}
-
-// CheckBaseImage checks base image choices
-func CheckBaseImage(dockerfile *parser.Dockerfile) []Issue {
-	var issues []Issue
-
-	// First, let's show what base image is being used
-	issues = append(issues, Issue{
-		Type:    InfoIssue,
-		Message: fmt.Sprintf("Base image: %s", dockerfile.BaseImage),
-	})
-
-	// Extract the base image name without tag
-	baseImageName := strings.Split(dockerfile.BaseImage, ":")[0]
-	
-	// Remove any registry prefix if present
-	if strings.Contains(baseImageName, "/") {
-		parts := strings.Split(baseImageName, "/")
-		baseImageName = parts[len(parts)-1]
-	}
-
-	// Check if using a known large base image
-	isLarge := false
-	for largeName := range LargeBaseImages {
-		if strings.HasPrefix(baseImageName, largeName) {
-			isLarge = true
-			break
-		}
-	}
-
-	if isLarge {
-		issues = append(issues, Issue{
-			Type:    WarningIssue,
-			Message: fmt.Sprintf("Using large base image (%s) — consider a smaller alternative like alpine", baseImageName),
-		})
-	}
-
-	return issues
-}
 
 // IsDockerAvailable checks if Docker is available in the system
 func IsDockerAvailable() bool {
@@ -76,10 +25,6 @@ func CheckLayerSizes(dockerfile *parser.Dockerfile, contextDir string) []Issue {
 		return issues
 	}
 
-	// Try to build the image if not already built
-	// This is a basic implementation and might need enhancement
-	// For now, we'll just check if Docker is available and assume the image exists
-	
 	// Check for large layers
 	largeLayerIssues := checkForLargeLayers(dockerfile.BaseImage)
 	if len(largeLayerIssues) > 0 {
@@ -120,6 +65,12 @@ func checkForLargeLayers(imageName string) []Issue {
 				issues = append(issues, Issue{
 					Type:    WarningIssue,
 					Message: fmt.Sprintf("Layer %d adds %dMB — consider using multistage builds", i, sizeMB),
+					Fix:     suggestMultistagePattern(imageName),
+					Severity: "high",
+					Impact:   fmt.Sprintf("Large layer size (%dMB) increases image size and deployment time", sizeMB),
+					References: []string{
+						"https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#use-multi-stage-builds",
+					},
 				})
 			}
 			
@@ -129,6 +80,12 @@ func checkForLargeLayers(imageName string) []Issue {
 				issues = append(issues, Issue{
 					Type:    WarningIssue,
 					Message: fmt.Sprintf("Layer %d grows by %dMB — check for unneeded files", i, growthMB),
+					Fix:     "Review the RUN instruction for this layer and ensure all temporary files are cleaned up",
+					Severity: "medium",
+					Impact:   fmt.Sprintf("Layer growth of %dMB indicates potential file cleanup issues", growthMB),
+					References: []string{
+						"https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#minimize-the-number-of-layers",
+					},
 				})
 			}
 		}
@@ -140,9 +97,9 @@ func checkForLargeLayers(imageName string) []Issue {
 }
 
 // suggestMultistagePattern returns advice for using multistage builds
-func suggestMultistagePattern(dockerfile *parser.Dockerfile) string {
+func suggestMultistagePattern(imageName string) string {
 	// Extract base image language
-	baseImageName := strings.Split(dockerfile.BaseImage, ":")[0]
+	baseImageName := strings.Split(imageName, ":")[0]
 	
 	// Remove any registry prefix if present
 	if strings.Contains(baseImageName, "/") {
@@ -153,14 +110,14 @@ func suggestMultistagePattern(dockerfile *parser.Dockerfile) string {
 	// Match and return appropriate multistage pattern
 	switch {
 	case strings.HasPrefix(baseImageName, "node"):
-		return "Use multistage build: FROM node:slim AS build + FROM node:alpine"
+		return "Use a multistage build:\n\n# Build stage\nFROM node:slim AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\n\n# Production stage\nFROM node:alpine\nWORKDIR /app\nCOPY --from=build /app/dist ./dist\nCMD [\"node\", \"dist/main.js\"]"
 	case strings.HasPrefix(baseImageName, "python"):
-		return "Use multistage build: FROM python:slim AS build + FROM python:alpine"
+		return "Use a multistage build:\n\n# Build stage\nFROM python:slim AS build\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\n\n# Production stage\nFROM python:alpine\nWORKDIR /app\nCOPY --from=build /app .\nCMD [\"python\", \"app.py\"]"
 	case strings.HasPrefix(baseImageName, "openjdk"):
-		return "Use multistage build: FROM openjdk:slim AS build + FROM eclipse-temurin:slim"
+		return "Use a multistage build:\n\n# Build stage\nFROM openjdk:slim AS build\nWORKDIR /app\nCOPY . .\nRUN ./mvnw package\n\n# Production stage\nFROM eclipse-temurin:slim\nWORKDIR /app\nCOPY --from=build /app/target/*.jar app.jar\nCMD [\"java\", \"-jar\", \"app.jar\"]"
 	case strings.HasPrefix(baseImageName, "golang"):
-		return "Use multistage build: FROM golang:alpine AS build + FROM alpine"
+		return "Use a multistage build:\n\n# Build stage\nFROM golang:alpine AS build\nWORKDIR /app\nCOPY . .\nRUN go build -o main .\n\n# Production stage\nFROM alpine\nWORKDIR /app\nCOPY --from=build /app/main .\nCMD [\"./main\"]"
 	default:
-		return "Consider using a multistage build to reduce image size"
+		return "Consider using a multistage build to reduce image size. Example structure:\n\n# Build stage\nFROM base-image AS build\n# ... build steps ...\n\n# Production stage\nFROM slim-base-image\n# ... copy artifacts and set up runtime ..."
 	}
 }

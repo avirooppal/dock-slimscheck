@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/avirooppal/dock-slimscheck/checks"
@@ -83,10 +84,6 @@ func main() {
 	// Print issues
 	printIssues(issues)
 
-	// Print summary
-	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("\n[%s] Check complete — %d issues found\n", green("✓"), len(issues))
-
 	// Return non-zero exit code if issues were found
 	if len(issues) > 0 {
 		os.Exit(2)
@@ -97,15 +94,50 @@ func printIssues(issues []checks.Issue) {
 	// Set up colors
 	yellow := color.New(color.FgYellow).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
+	blue := color.New(color.FgBlue).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
+	green := color.New(color.FgGreen).SprintFunc()
 
 	for _, issue := range issues {
+		// Print issue header with a newline before each issue
+		fmt.Println()
 		prefix := yellow("[!]")
 		if issue.Type == checks.SecurityIssue {
 			prefix = red("[SECURITY]")
 		} else if issue.Type == checks.InfoIssue {
-			prefix = "[+]"
+			prefix = green("[+]")
 		}
 
 		fmt.Printf("%s %s\n", prefix, issue.Message)
+		
+		// Print severity and impact if they exist
+		if issue.Severity != "" {
+			fmt.Printf("  %s Severity: %s\n", blue("→"), issue.Severity)
+		}
+		if issue.Impact != "" {
+			fmt.Printf("  %s Impact: %s\n", blue("→"), issue.Impact)
+		}
+		
+		// Print fix suggestion with proper indentation
+		if issue.Fix != "" {
+			fmt.Printf("  %s Fix:\n", blue("→"))
+			// Split fix into lines and indent each line
+			fixLines := strings.Split(issue.Fix, "\n")
+			for _, line := range fixLines {
+				fmt.Printf("    %s\n", cyan(line))
+			}
+		}
+		
+		// Print references
+		if len(issue.References) > 0 {
+			fmt.Printf("  %s References:\n", blue("→"))
+			for _, ref := range issue.References {
+				fmt.Printf("    - %s\n", ref)
+			}
+		}
 	}
+
+	// Print summary with a newline before it
+	fmt.Println()
+	fmt.Printf("[%s] Check complete — %d issues found\n", green("✓"), len(issues))
 }

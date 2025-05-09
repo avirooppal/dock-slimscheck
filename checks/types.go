@@ -1,22 +1,20 @@
 package checks
 
 // IssueType represents the type of issue found
-type IssueType string
+type IssueType int
 
 const (
-	// InfoIssue represents an informational message
-	InfoIssue IssueType = "info"
-	
-	// WarningIssue represents a warning issue
-	WarningIssue IssueType = "warning"
-	
-	// SecurityIssue represents a security issue
-	SecurityIssue IssueType = "security"
+	WarningIssue IssueType = iota
+	SecurityIssue
+	InfoIssue
 )
 
-// Issue represents a problem found in a Dockerfile
+// Issue represents a problem found in the Dockerfile
 type Issue struct {
-	Type    IssueType
-	Message string
-	Line    int // Optional line number
+	Type        IssueType
+	Message     string
+	Fix         string    // Detailed fix suggestion
+	Severity    string    // "low", "medium", "high"
+	Impact      string    // Description of the impact
+	References  []string  // Links to relevant documentation
 }

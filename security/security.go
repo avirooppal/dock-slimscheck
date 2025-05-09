@@ -1,8 +1,8 @@
 package security
 
 import (
-	"github.com/avirooppal/dock-slimscheck.git/checks"
-	"github.com/avirooppal/dock-slimscheck.git/parser"
+	"github.com/avirooppal/dock-slimscheck/checks"
+	"github.com/avirooppal/dock-slimscheck/parser"
 )
 
 // RunSecurityChecks performs security checks on the Dockerfile
