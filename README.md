@@ -16,6 +16,7 @@ A Dockerfile analysis tool that helps identify potential issues, security concer
 - Go 1.21 or later
 - Docker (optional, for layer size analysis)
 
+<<<<<<< HEAD
 ### Global Installation
 ```bash
 # Clone the repository
@@ -29,6 +30,8 @@ go install
 dock-slimcheck --version
 ```
 
+=======
+>>>>>>> d1a9448fc09eb35e909d300ccd808f1d97aa9007
 ### Building from Source
 ```bash
 # Clone the repository
@@ -43,17 +46,29 @@ go build -o dock-slimcheck.exe
 
 Basic usage:
 ```bash
+<<<<<<< HEAD
 dock-slimcheck ./path/to/Dockerfile
+=======
+dock-slimcheck.exe ./path/to/Dockerfile
+>>>>>>> d1a9448fc09eb35e909d300ccd808f1d97aa9007
 ```
 
 With security checks enabled:
 ```bash
+<<<<<<< HEAD
 dock-slimcheck ./path/to/Dockerfile --security
+=======
+dock-slimcheck.exe ./path/to/Dockerfile --security
+>>>>>>> d1a9448fc09eb35e909d300ccd808f1d97aa9007
 ```
 
 Show version:
 ```bash
+<<<<<<< HEAD
 dock-slimcheck --version
+=======
+dock-slimcheck.exe --version
+>>>>>>> d1a9448fc09eb35e909d300ccd808f1d97aa9007
 ```
 
 ## Checks Performed
