@@ -205,13 +205,19 @@ Contributions are welcome! Please feel free to submit a Pull Request. Here are s
 
 Current version: **1.0.0**
 
+<<<<<<< HEAD
 ## License
 
 MIT License - feel free to use this tool in your projects!
 
+=======
+>>>>>>> 7e70341edcadc150fee22f09e979131aec512bfa
 ## Acknowledgments
 
 * Docker best practices documentation
 * Alpine Linux project
 * The open-source community
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7e70341edcadc150fee22f09e979131aec512bfa
