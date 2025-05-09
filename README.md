@@ -1,6 +1,3 @@
-Here is a cleaned-up and properly merged version of your Markdown file, resolving the Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) and making the formatting consistent:
-
----
 
 # Dock-SlimCheck
 
