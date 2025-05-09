@@ -29,7 +29,7 @@ cd dock-slimscheck
 go install
 
 # Verify installation
-dock-slimcheck --version
+dock-slimscheck --version
 ```
 
 ### Building from Source
@@ -60,7 +60,7 @@ dock-slimcheck ./path/to/Dockerfile --security
 Show version:
 
 ```bash
-dock-slimcheck --version
+dock-slimscheck --version
 ```
 
 ## Checks Performed
